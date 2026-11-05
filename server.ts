@@ -10,8 +10,15 @@ import { peladaRoutes } from './server/routes/peladaRoutes.js';
 import { organizerRoutes } from './server/routes/organizerRoutes.js';
 import { ownerRoutes } from './server/routes/ownerRoutes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Suporte híbrido compatível com ESM (tsx) e CommonJS empacotado (esbuild dist/server.cjs no Termux/Node 26)
+const getDirname = () => {
+  if (typeof __dirname !== 'undefined') return __dirname;
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
+    return path.dirname(fileURLToPath(import.meta.url));
+  }
+  return process.cwd();
+};
+const currentDir = getDirname();
 
 async function startServer() {
   const app = express();
