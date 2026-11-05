@@ -68,7 +68,10 @@ function MainAppContent() {
     }
   }, [activeTab, isTabAllowed]);
 
-  // Save active match state changes to localStorage
+  // Flag para evitar loop infinito quando a atualização vem do servidor
+  const isIncomingServerUpdate = React.useRef(false);
+
+  // 1. Salva no localStorage e Envia Broadcast para o Servidor Local (Node.js no Smartphone)
   useEffect(() => {
     localStorage.setItem('r3play_active_match', JSON.stringify(match));
 
@@ -78,7 +81,6 @@ function MainAppContent() {
       try {
         const matchesList: Match[] = JSON.parse(storedList);
         const updatedList = matchesList.map((m) => (m.id === match.id ? match : m));
-        // If not in list, add it
         if (!matchesList.some((m) => m.id === match.id)) {
           updatedList.unshift(match);
         }
@@ -89,7 +91,69 @@ function MainAppContent() {
     } else {
       localStorage.setItem('r3play_matches', JSON.stringify([match]));
     }
+
+    // Se a alteração veio de uma digitação/clique neste aparelho, envia para o backend
+    if (!isIncomingServerUpdate.current) {
+      fetch('/api/match/live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(match),
+      }).catch((err) => {
+        // Silencioso em caso de rede offline
+      });
+    } else {
+      isIncomingServerUpdate.current = false;
+    }
   }, [match]);
+
+  // 2. Conexão em Tempo Real com o Servidor (SSE - Server-Sent Events)
+  // Recebe instantaneamente quando a Smart TV, outro celular ou o mesário alterar um ponto!
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+
+    try {
+      eventSource = new EventSource('/api/match/events');
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if ((data.type === 'MATCH_UPDATED' || data.type === 'INITIAL_STATE') && data.match) {
+            isIncomingServerUpdate.current = true;
+            setMatch(data.match);
+          }
+        } catch (err) {
+          // parse error silencioso
+        }
+      };
+
+      eventSource.onerror = () => {
+        // Fallback de polling leve caso o navegador da Smart TV não suporte SSE contínuo
+      };
+    } catch (e) {
+      console.warn('SSE não suportado neste navegador, usando polling.');
+    }
+
+    // Polling de segurança (caso desconecte do SSE) a cada 2 segundos
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/match/live');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && JSON.stringify(json.data) !== localStorage.getItem('r3play_active_match')) {
+            isIncomingServerUpdate.current = true;
+            setMatch(json.data);
+          }
+        }
+      } catch (err) {
+        // Silencioso
+      }
+    }, 2000);
+
+    return () => {
+      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+    };
+  }, []);
 
   // Handle Point Added & Silent Auto-Sync to R3team Central Webhook
   const handlePointAdded = async (updatedMatch: Match) => {

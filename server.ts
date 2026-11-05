@@ -9,6 +9,7 @@ import { authRoutes } from './server/routes/authRoutes.js';
 import { peladaRoutes } from './server/routes/peladaRoutes.js';
 import { organizerRoutes } from './server/routes/organizerRoutes.js';
 import { ownerRoutes } from './server/routes/ownerRoutes.js';
+import { matchLiveRoutes } from './server/routes/matchLiveRoutes.js';
 
 // Suporte híbrido compatível com ESM (tsx) e CommonJS empacotado (esbuild dist/server.cjs no Termux/Node 26)
 const getDirname = () => {
@@ -70,6 +71,9 @@ async function startServer() {
 
   // 3. DONO DA QUADRA / ARENA (Role: 'OWNER'): Gestão de Organizadores e Subvenda Stream OBS
   app.use('/api/owner', ownerRoutes);
+
+  // 4. SINCRONIZAÇÃO EM TEMPO REAL (Placar Instantâneo Smart TV & Celulares via SSE e REST)
+  app.use('/api/match', matchLiveRoutes);
 
   // 6. Integração com Vite (Desenvolvimento vs. Produção Estática)
   if (process.env.NODE_ENV !== 'production') {
