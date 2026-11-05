@@ -1,0 +1,6 @@
+{
+  "name": "R3 Play",
+  "description": "Sistema oficial R3team Multi-tenant (White Label) para gestão esportiva e placar de vôlei, com suporte a subdomínios, personalização de marca e PostgreSQL.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
