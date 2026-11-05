@@ -95,6 +95,7 @@ export interface MatchConfig {
   maxSubstitutionsPerSet: number; // usually 6
   maxTimeoutsPerSet: number; // usually 2
   courtPlayersPerTeam?: number; // 2 (Dupla), 3 (Trio), 4 (Quarteto), 5 (Quinteto), 6 (Sexteto/Oficial)
+  rotationSystem?: '6x0' | '5x1_fixed_setter'; // '6x0' (todos rodam) ou '5x1_fixed_setter' (levantador fixo no P3 e demais rodam)
   maxWaitingTeams?: number; // Limite de quantos times de até no máx 6 jogadores podem ficar na lista de espera (0 = ilimitado)
   maxPlayersPerWaitingTeam?: number; // Máximo de jogadores por time na fila (2 a 6, padrão 6)
   soundEffectsEnabled?: boolean;

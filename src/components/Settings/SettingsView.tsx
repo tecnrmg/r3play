@@ -49,6 +49,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ match, setMatch, onN
   const [maxTimeouts, setMaxTimeouts] = useState<number>(match.config.maxTimeoutsPerSet || 2);
   const [maxSubs, setMaxSubs] = useState<number>(match.config.maxSubstitutionsPerSet || 6);
   const [courtPlayersPerTeam, setCourtPlayersPerTeam] = useState<number>(match.config.courtPlayersPerTeam || 6);
+  const [rotationSystem, setRotationSystem] = useState<'6x0' | '5x1_fixed_setter'>(match.config.rotationSystem || '6x0');
   const [maxWaitingTeams, setMaxWaitingTeams] = useState<number>(match.config.maxWaitingTeams ?? 0);
   const [maxPlayersPerWaitingTeam, setMaxPlayersPerWaitingTeam] = useState<number>(match.config.maxPlayersPerWaitingTeam ?? 6);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(match.config.soundEffectsEnabled ?? true);
@@ -105,6 +106,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ match, setMatch, onN
       maxTimeoutsPerSet: maxTimeouts,
       maxSubstitutionsPerSet: maxSubs,
       courtPlayersPerTeam,
+      rotationSystem,
       maxWaitingTeams,
       maxPlayersPerWaitingTeam,
       soundEffectsEnabled: soundEnabled,
@@ -358,6 +360,85 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ match, setMatch, onN
                     <div className="text-[10px] text-slate-300 opacity-80 mt-0.5">{preset.desc}</div>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* SISTEMA DE RODÍZIO EM QUADRA: 5x1 (Levantador Fixo P3) vs 6x0 (Todos Rodam) */}
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-teal-500/40 space-y-3 shadow-inner">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <label className="font-black text-sm text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-teal-400" />
+                    Sistema de Rodízio em Quadra (Qualquer Quantidade de Jogadores)
+                  </label>
+                  <p className="text-xs text-slate-300">
+                    Escolha a mecânica de rotação tática adotada pelas equipes durante a partida:
+                  </p>
+                </div>
+
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${
+                  rotationSystem === '5x1_fixed_setter'
+                    ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                    : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                }`}>
+                  {rotationSystem === '5x1_fixed_setter' ? '⚡ 5x1 (Levantador Fixo)' : '🔄 6x0 (Rodízio Completo)'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {/* Opção 1: 5x1 com Levantador Fixo no P3 */}
+                <button
+                  type="button"
+                  onClick={() => setRotationSystem('5x1_fixed_setter')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                    rotationSystem === '5x1_fixed_setter'
+                      ? 'bg-gradient-to-br from-teal-950/80 to-slate-900 border-teal-400 text-white shadow-lg shadow-teal-500/20 ring-2 ring-teal-400/40'
+                      : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-teal-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+                      1. Levantador Fixo no P3 (5x1)
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300">
+                      Tático
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    O <strong>Levantador permanece fixo no P3</strong> (Central de Rede). Quando a equipe ganha o saque, <strong>somente os outros jogadores realizam o rodízio</strong> entre as posições de saque, defesa e ataque.
+                  </p>
+                  <div className="text-[10px] text-teal-400/90 font-semibold pt-1 border-t border-slate-800/60 flex items-center gap-1">
+                    ✓ Aplicável a Quartetos, Quintetos e Sextetos
+                  </div>
+                </button>
+
+                {/* Opção 2: 6x0 - Todos Rodam em Todas as Posições */}
+                <button
+                  type="button"
+                  onClick={() => setRotationSystem('6x0')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                    rotationSystem === '6x0'
+                      ? 'bg-gradient-to-br from-blue-950/80 to-slate-900 border-blue-400 text-white shadow-lg shadow-blue-500/20 ring-2 ring-blue-400/40'
+                      : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-blue-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-400" />
+                      2. Rodízio Completo (6x0)
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                      Oficial / Geral
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    <strong>Todos os jogadores rodam</strong> ciclicamente por todas as posições da quadra (P1 ao P6), alternando sacador, rede e defesas a cada troca de posse de saque.
+                  </p>
+                  <div className="text-[10px] text-blue-400/90 font-semibold pt-1 border-t border-slate-800/60 flex items-center gap-1">
+                    ✓ Todos passam pelo saque e pela rede
+                  </div>
+                </button>
               </div>
             </div>
 

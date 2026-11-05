@@ -1,0 +1,56 @@
+name: Gerar APK do R3 Play (Android)
+
+on:
+  workflow_dispatch: # Permite disparar manualmente com 1 clique na aba Actions do GitHub
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-android:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Baixar Código do Repositório
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 3. Configurar Java JDK 17 (Necessário para compilar Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: 4. Instalar Dependências e Gerar Build Web
+        run: |
+          npm ci --legacy-peer-deps || npm install
+          npm run build
+
+      - name: 5. Inicializar / Sincronizar Plataforma Android no Capacitor
+        run: |
+          # Adiciona a pasta android se ainda não existir
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          # Sincroniza os arquivos compilados do Vite (dist) para a pasta Android
+          npx cap sync android
+
+      - name: 6. Compilar o APK com Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: 7. Disponibilizar APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: R3Play-Placar-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14

@@ -222,10 +222,12 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
     const isTeamA = teamId === match.teamA.id;
     const team = isTeamA ? match.teamA : match.teamB;
 
+    const rotationSystem = match.config.rotationSystem || '6x0';
+
     const newRotation =
       direction === 'cw'
-        ? rotateTeamClockwise(team.rotation, courtPlayerCount)
-        : rotateTeamCounterClockwise(team.rotation, courtPlayerCount);
+        ? rotateTeamClockwise(team.rotation, courtPlayerCount, rotationSystem)
+        : rotateTeamCounterClockwise(team.rotation, courtPlayerCount, rotationSystem);
 
     const updatedTeam: Team = {
       ...team,
@@ -366,6 +368,8 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
     const isServer = team.rotation[0] === player?.id && match.servingTeamId === team.id;
     const isLibero = player?.position.toLowerCase().includes('líbero') || player?.position.toLowerCase().includes('libero');
 
+    const isFixedSetter = match.config.rotationSystem === '5x1_fixed_setter' && posCode === 'P3';
+
     return (
       <div
         key={`player-node-${team.id}-${posIndex}-${posCode}`}
@@ -381,6 +385,8 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
         className={`absolute -translate-x-1/2 -translate-y-1/2 w-24 sm:w-28 p-1.5 sm:p-2 rounded-2xl border-2 transition-all cursor-pointer shadow-2xl hover:scale-105 hover:z-30 group ${
           isServer
             ? 'bg-gradient-to-b from-amber-500/30 to-orange-600/30 border-amber-400 text-white ring-4 ring-amber-400/40 animate-pulse'
+            : isFixedSetter
+            ? 'bg-gradient-to-b from-teal-500/30 to-emerald-700/30 border-teal-400 text-white ring-2 ring-teal-400/50'
             : isLibero
             ? 'bg-gradient-to-b from-yellow-500/20 to-amber-600/20 border-yellow-400 text-yellow-200'
             : isTeamA
@@ -392,7 +398,11 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
         <div className="flex items-center justify-between text-[10px] font-extrabold mb-1">
           <span
             className={`px-1.5 py-0.5 rounded font-mono ${
-              isTeamA ? 'bg-blue-600/80 text-white' : 'bg-red-600/80 text-white'
+              isFixedSetter
+                ? 'bg-teal-500 text-slate-950 font-black'
+                : isTeamA
+                ? 'bg-blue-600/80 text-white'
+                : 'bg-red-600/80 text-white'
             }`}
           >
             {posCode}
@@ -402,7 +412,12 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
               🏐 SAQUE
             </span>
           )}
-          {isLibero && !isServer && (
+          {isFixedSetter && !isServer && (
+            <span className="px-1.5 py-0.5 rounded bg-teal-400 text-slate-950 font-black text-[9px]">
+              LEV. FIXO
+            </span>
+          )}
+          {isLibero && !isServer && !isFixedSetter && (
             <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-slate-950 font-black text-[9px]">
               LÍBERO
             </span>
@@ -710,9 +725,33 @@ export const CourtRotationView: React.FC<CourtRotationViewProps> = ({ match, set
             ))}
           </div>
 
+          {/* Rotation System Switcher (5x1 Levantador Fixo vs 6x0 Rodízio) */}
+          <div className="flex items-center gap-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setMatch({
+                  ...match,
+                  config: {
+                    ...match.config,
+                    rotationSystem: match.config.rotationSystem === '5x1_fixed_setter' ? '6x0' : '5x1_fixed_setter',
+                  },
+                });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                match.config.rotationSystem === '5x1_fixed_setter'
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30 ring-1 ring-teal-400'
+                  : 'bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700'
+              }`}
+              title="Clique para alternar entre 5x1 (Levantador Fixo no P3) e 6x0 (Todos Rodam)"
+            >
+              <span>{match.config.rotationSystem === '5x1_fixed_setter' ? '⚡ 5x1 (Lev. Fixo P3)' : '🔄 6x0 (Todos Rodam)'}</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setShowRotationArrows(!showRotationArrows)}
-            className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               showRotationArrows
                 ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-300'
                 : 'bg-slate-800 border-slate-700 text-slate-400'

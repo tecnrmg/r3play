@@ -165,10 +165,11 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
     let nextServingTeamId = match.servingTeamId;
     if (match.servingTeamId !== teamId) {
       nextServingTeamId = teamId;
+      const rotSystem = match.config.rotationSystem || '6x0';
       if (isTeamA) {
-        updatedTeamA.rotation = rotateTeamClockwise(updatedTeamA.rotation, match.config.courtPlayersPerTeam);
+        updatedTeamA.rotation = rotateTeamClockwise(updatedTeamA.rotation, match.config.courtPlayersPerTeam, rotSystem);
       } else {
-        updatedTeamB.rotation = rotateTeamClockwise(updatedTeamB.rotation, match.config.courtPlayersPerTeam);
+        updatedTeamB.rotation = rotateTeamClockwise(updatedTeamB.rotation, match.config.courtPlayersPerTeam, rotSystem);
       }
     }
 
